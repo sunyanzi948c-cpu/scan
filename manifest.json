@@ -1,0 +1,20 @@
+{
+  "name": "設備掃碼查詢系統",
+  "short_name": "設備掃碼",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4A90E2",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192/4A90E2/FFFFFF?text=Scan",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512/4A90E2/FFFFFF?text=Scan",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

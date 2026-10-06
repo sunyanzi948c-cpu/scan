@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>設備掃碼查詢系統</title>
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4A90E2">
+  
+  <!-- 引入 html5-qrcode 掃碼套件 -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f6fa; color: #333; }
+    h2 { text-align: center; color: #2c3e50; }
+    #reader { width: 100%; max-width: 500px; margin: 0 auto; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    #result-container { max-width: 500px; margin: 20px auto; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: none; }
+    .info-row { padding: 8px 0; border-bottom: 1px solid #eee; }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { font-weight: bold; color: #7f8c8d; display: inline-block; width: 100px; }
+    #loading { text-align: center; display: none; margin-top: 15px; color: #e67e22; font-weight: bold; }
+    button { display: block; width: 100%; max-width: 500px; margin: 20px auto; padding: 12px; background-color: #4A90E2; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
+    button:active { background-color: #357ABD; }
+  </style>
+</head>
+<body>
+
+  <h2>📱 設備掃碼查詢</h2>
+  
+  <!-- 掃描器容器 -->
+  <div id="reader"></div>
+  
+  <!-- 重新掃描按鈕 (預設隱藏) -->
+  <button id="rescan-btn" style="display: none;" onclick="startScanner()">重新掃描</button>
+
+  <!-- 讀取中提示 -->
+  <div id="loading">資料查詢中，請稍候...</div>
+
+  <!-- 查詢結果呈現區 -->
+  <div id="result-container">
+    <h3 style="margin-top:0; color:#27ae60;">✅ 查詢成功</h3>
+    <div id="device-info"></div>
+  </div>
+
+  <script src="app.js"></script>
+  
+  <!-- 註冊 Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service Worker 註冊成功'))
+          .catch(err => console.log('Service Worker 註冊失敗', err));
+      });
+    }
+  </script>
+</body>
+</html>
