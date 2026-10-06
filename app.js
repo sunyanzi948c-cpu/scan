@@ -1,5 +1,5 @@
 // ⚠️ 請將這裡替換成你剛剛部署 GAS 取得的網頁應用程式網址
-const API_URL = "https://script.google.com/macros/s/AKfycbxgA159GeCPV2hF1u6o3I1cVp_nxCIO4322_L672Qn5384HdvtFpeZ_opfpIvkarkPs/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbx_IkVRXtPHyFq6vGtrrI9d1_ckTJMZ1FT-J0bB7oGWjfXTU5-WwF5-tsTouKEif0IA/exec"; 
 
 let html5QrCode;
 
