@@ -1,5 +1,5 @@
 // ⚠️ 請將這裡替換成你剛剛部署 GAS 取得的網頁應用程式網址
-const API_URL = "https://script.google.com/macros/s/AKfycbx_IkVRXtPHyFq6vGtrrI9d1_ckTJMZ1FT-J0bB7oGWjfXTU5-WwF5-tsTouKEif0IA/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbwG4niMueHcXOg-eWSFCCR4oek4rel_tTGjRf3ZL9kGbxzuxjryvY9I1Ev6aVFcbhBM/exec"; 
 
 let html5QrCode;
 
@@ -36,13 +36,22 @@ function onScanSuccess(decodedText, decodedResult) {
   });
 }
 
-// 呼叫 API 查詢資料
+// 修改原本的 fetchDataFromGAS 函式
 function fetchDataFromGAS(barcode) {
   const requestUrl = `${API_URL}?barcode=${encodeURIComponent(barcode)}`;
   
-  fetch(requestUrl)
+  // 設定 10 秒的 Timeout (可以根據需求調整)
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => {
+      reject(new Error("請求逾時"));
+    }, 10000); 
+  });
+
+  // 讓 fetch 與 timeout 競賽
+  Promise.race([fetch(requestUrl), timeoutPromise])
     .then(response => response.json())
     .then(result => {
+      // ... 原本成功處理的邏輯 ...
       document.getElementById('loading').style.display = 'none';
       document.getElementById('rescan-btn').style.display = 'block';
       
@@ -55,8 +64,14 @@ function fetchDataFromGAS(barcode) {
     .catch(error => {
       document.getElementById('loading').style.display = 'none';
       document.getElementById('rescan-btn').style.display = 'block';
-      console.error('API 錯誤:', error);
-      alert("連線發生錯誤，請檢查網路狀態。");
+      
+      // 根據錯誤類型給予不同提示
+      if (error.message === "請求逾時") {
+         alert("查詢時間過長，請確認網路收訊後，點擊「重新掃描」再試一次。");
+      } else {
+         console.error('API 錯誤:', error);
+         alert("連線發生錯誤，請檢查網路狀態。");
+      }
     });
 }
 
