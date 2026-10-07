@@ -126,3 +126,47 @@ function renderData(data) {
   
   document.getElementById('result-container').style.display = 'block';
 }
+
+// ==========================================
+// 4. 新增功能：手動輸入條碼查詢
+// ==========================================
+function manualSearch() {
+  const inputField = document.getElementById('manual-barcode');
+  const barcode = inputField.value.trim();
+  
+  if (!barcode) {
+    alert("請輸入設備條碼！");
+    return;
+  }
+
+  // 執行搜尋前，先收起手機的虛擬鍵盤 (優化手機端 UX)
+  inputField.blur();
+
+  // 嘗試停止相機掃描 (避免背景繼續耗電與衝突)，然後執行本地搜尋
+  if (html5QrCode) {
+    try {
+      html5QrCode.stop().then(() => {
+        searchLocalData(barcode);
+      }).catch(err => {
+        // 如果相機本來就處於停止狀態，會跳到 catch，此時直接搜尋即可
+        searchLocalData(barcode);
+      });
+    } catch (e) {
+      searchLocalData(barcode);
+    }
+  } else {
+    searchLocalData(barcode);
+  }
+}
+
+// 監聽手動輸入框的「Enter」鍵 (讓使用者用電腦鍵盤或手機鍵盤按下確認時也能搜尋)
+document.addEventListener("DOMContentLoaded", () => {
+  const manualInput = document.getElementById('manual-barcode');
+  if (manualInput) {
+    manualInput.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        manualSearch();
+      }
+    });
+  }
+});

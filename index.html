@@ -99,6 +99,18 @@
         id="sync-time"
         style="font-size: 12px; color: #7f8c8d; margin-top: 5px"></div>
     </div>
+
+    <!-- 👇 請在這裡加入「手動輸入」區塊 👇 -->
+  <div style="text-align: center; margin-bottom: 15px;">
+    <input type="text" id="manual-barcode" placeholder="或手動輸入條碼..." 
+           style="padding: 10px; width: 55%; font-size: 16px; border: 1px solid #bdc3c7; border-radius: 4px; box-sizing: border-box;">
+    <button onclick="manualSearch()" 
+            style="padding: 10px; width: 25%; font-size: 16px; background-color: #34495e; color: white; border: none; border-radius: 4px; cursor: pointer;">
+      查詢
+    </button>
+  </div>
+  <!-- 👆 手動輸入區塊結束 👆 -->
+   
     <!-- 掃描器容器 -->
     <div id="reader"></div>
 
