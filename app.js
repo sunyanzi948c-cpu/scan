@@ -1,7 +1,58 @@
-// ⚠️ 請將這裡替換成你剛剛部署 GAS 取得的網頁應用程式網址
-const API_URL = "https://script.google.com/macros/s/AKfycbwG4niMueHcXOg-eWSFCCR4oek4rel_tTGjRf3ZL9kGbxzuxjryvY9I1Ev6aVFcbhBM/exec"; 
+// ⚠️ 這是您原本的 API 網址，已保留
+const API_URL = "https://script.google.com/macros/s/AKfycbxpLmSQ9uhyr1JHpKTUVqbcg_kp-2ghMBEJlELd8ce5O2-yZfOatl1eRDgsQO5GtbnW/exec"; 
 
 let html5QrCode;
+
+// 網頁載入時，檢查上次同步時間並啟動掃描器
+document.addEventListener("DOMContentLoaded", () => {
+  const lastSync = localStorage.getItem("lastSyncTime");
+  if (lastSync) {
+    const syncTimeDiv = document.getElementById("sync-time");
+    if (syncTimeDiv) syncTimeDiv.innerText = "最後同步時間：" + lastSync;
+  }
+  startScanner();
+});
+
+// ==========================================
+// 1. 新增功能：下載整份表單並存入手機 (盤點前執行一次)
+// ==========================================
+function syncData() {
+  const btn = document.querySelector('button[onclick="syncData()"]');
+  if (btn) {
+    btn.innerText = "🔄 資料下載中...";
+    btn.disabled = true;
+  }
+
+  fetch(API_URL + "?action=sync")
+    .then(response => response.json())
+    .then(result => {
+      if (result.status === "success") {
+        // 將陣列轉為字串，存入瀏覽器空間 (LocalStorage)
+        localStorage.setItem("deviceList", JSON.stringify(result.data));
+        
+        // 記錄當下時間
+        const now = new Date().toLocaleString();
+        localStorage.setItem("lastSyncTime", now);
+        
+        const syncTimeDiv = document.getElementById("sync-time");
+        if (syncTimeDiv) syncTimeDiv.innerText = "最後同步時間：" + now;
+        
+        alert(`同步完成！共下載 ${result.data.length} 筆設備資料。\n現在您可以離線秒速掃碼了！`);
+      } else {
+        alert("同步失敗：" + result.message);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert("網路連線錯誤，無法同步資料。");
+    })
+    .finally(() => {
+      if (btn) {
+        btn.innerText = "🔄 從雲端同步最新資料";
+        btn.disabled = false;
+      }
+    });
+}
 
 // 初始化掃描器
 function startScanner() {
@@ -26,53 +77,38 @@ function onScanSuccess(decodedText, decodedResult) {
   html5QrCode.stop().then(() => {
     console.log("掃描成功，停止相機。條碼:", decodedText);
     
-    // 2. 顯示讀取中狀態
-    document.getElementById('loading').style.display = 'block';
-    
-    // 3. 呼叫 GAS 後端 API
-    fetchDataFromGAS(decodedText);
+    // 2. 呼叫本地搜尋函數 (取代原本的 fetchDataFromGAS)
+    searchLocalData(decodedText);
   }).catch(err => {
     console.error("停止相機失敗:", err);
   });
 }
 
-// 修改原本的 fetchDataFromGAS 函式
-function fetchDataFromGAS(barcode) {
-  const requestUrl = `${API_URL}?barcode=${encodeURIComponent(barcode)}`;
+// ==========================================
+// 2. 新增功能：在 LocalStorage 中瞬間搜尋
+// ==========================================
+function searchLocalData(barcode) {
+  const localDataStr = localStorage.getItem("deviceList");
   
-  // 設定 10 秒的 Timeout (可以根據需求調整)
-  const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => {
-      reject(new Error("請求逾時"));
-    }, 10000); 
-  });
+  if (!localDataStr) {
+    alert("手機內沒有資料，請先點擊上方的「從雲端同步最新資料」！");
+    document.getElementById('rescan-btn').style.display = 'block';
+    return;
+  }
 
-  // 讓 fetch 與 timeout 競賽
-  Promise.race([fetch(requestUrl), timeoutPromise])
-    .then(response => response.json())
-    .then(result => {
-      // ... 原本成功處理的邏輯 ...
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('rescan-btn').style.display = 'block';
-      
-      if (result.status === "success") {
-        renderData(result.data);
-      } else {
-        alert(result.message || "找不到該設備資料");
-      }
-    })
-    .catch(error => {
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('rescan-btn').style.display = 'block';
-      
-      // 根據錯誤類型給予不同提示
-      if (error.message === "請求逾時") {
-         alert("查詢時間過長，請確認網路收訊後，點擊「重新掃描」再試一次。");
-      } else {
-         console.error('API 錯誤:', error);
-         alert("連線發生錯誤，請檢查網路狀態。");
-      }
-    });
+  const deviceList = JSON.parse(localDataStr);
+  
+  // 使用 JavaScript 內建方法在陣列中尋找符合的條碼 (瞬間完成)
+  // 注意：這裡的 '設備條碼' 必須與您 Google 試算表 A1 儲存格的標題完全一致
+  const foundDevice = deviceList.find(item => String(item['設備條碼']).trim() === String(barcode).trim());
+
+  document.getElementById('rescan-btn').style.display = 'block';
+
+  if (foundDevice) {
+    renderData(foundDevice); // 找到資料，直接渲染畫面
+  } else {
+    alert(`資料庫中找不到該條碼 (${barcode}) 的設備資料\n(如果這是新設備，請先按同步按鈕更新資料)`);
+  }
 }
 
 // 將資料渲染到畫面上
@@ -90,8 +126,3 @@ function renderData(data) {
   
   document.getElementById('result-container').style.display = 'block';
 }
-
-// 網頁載入後自動啟動掃描
-document.addEventListener("DOMContentLoaded", () => {
-  startScanner();
-});
