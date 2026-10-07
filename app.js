@@ -59,29 +59,66 @@ function startScanner() {
   document.getElementById('result-container').style.display = 'none';
   document.getElementById('rescan-btn').style.display = 'none';
   
-  html5QrCode = new Html5Qrcode("reader");
+  // 【關鍵修正 1】：啟動前，若有舊實體則強制清理，避免畫面殘留白框
+  if (html5QrCode) {
+    try { html5QrCode.clear(); } catch (e) {}
+  }
   
-  // 設定使用手機後置鏡頭 (environment)
+  html5QrCode = new Html5Qrcode("reader");
   const config = { fps: 10, qrbox: { width: 250, height: 150 } };
   
   html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
     .catch(err => {
       console.error("相機啟動失敗:", err);
-      alert("無法啟動相機，請確認是否已給予權限。");
+      // 若相機硬體被鎖死，給予明確的操作提示
+      alert("相機被佔用或啟動失敗！\n請將 APP 從背景「往上滑掉」完全關閉後，再重新開啟。");
     });
 }
 
 // 掃描成功時的處理
 function onScanSuccess(decodedText, decodedResult) {
-  // 1. 停止相機掃描，避免重複觸發
-  html5QrCode.stop().then(() => {
-    console.log("掃描成功，停止相機。條碼:", decodedText);
-    
-    // 2. 呼叫本地搜尋函數 (取代原本的 fetchDataFromGAS)
+  if (html5QrCode) {
+    // 【關鍵修正 2】：停止相機後，徹底清理 UI 並將實體銷毀
+    html5QrCode.stop().then(() => {
+      html5QrCode.clear();
+      html5QrCode = null; 
+      searchLocalData(decodedText);
+    }).catch(err => {
+      console.log("停止相機時發生錯誤", err);
+      try { html5QrCode.clear(); } catch(e) {}
+      html5QrCode = null;
+      searchLocalData(decodedText);
+    });
+  } else {
     searchLocalData(decodedText);
-  }).catch(err => {
-    console.error("停止相機失敗:", err);
-  });
+  }
+}
+
+// 手動輸入條碼查詢
+function manualSearch() {
+  const inputField = document.getElementById('manual-barcode');
+  const barcode = inputField.value.trim();
+  
+  if (!barcode) {
+    alert("請輸入設備條碼！");
+    return;
+  }
+  inputField.blur(); // 收起手機虛擬鍵盤
+
+  // 【關鍵修正 3】：手動查詢時，也要正確釋放相機資源
+  if (html5QrCode) {
+    html5QrCode.stop().then(() => {
+      html5QrCode.clear();
+      html5QrCode = null;
+      searchLocalData(barcode);
+    }).catch(err => {
+      try { html5QrCode.clear(); } catch(e) {}
+      html5QrCode = null;
+      searchLocalData(barcode);
+    });
+  } else {
+    searchLocalData(barcode);
+  }
 }
 
 // ==========================================
