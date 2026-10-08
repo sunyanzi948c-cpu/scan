@@ -161,9 +161,8 @@ function renderData(data) {
     const row = document.createElement('div');
     row.className = 'info-row';
     
-    // 【關鍵修改】：針對「圖檔1」與「圖檔2」欄位做圖片渲染處理
+    // 針對「圖檔1」與「圖檔2」欄位做圖片渲染處理
     if (key === '圖檔1' || key === '圖檔2') {
-      // 判斷是否為 Google Drive 連結，若是，嘗試轉換為可直接顯示圖片的格式
       let imageUrl = value;
       if (value.includes("drive.google.com/file/d/")) {
         const fileId = value.split("/d/")[1].split("/")[0];
@@ -184,9 +183,20 @@ function renderData(data) {
     else if (String(value).startsWith('http')) {
       row.innerHTML = `<span class="info-label">${key}：</span><a href="${value}" target="_blank" style="color: #3498db;">🔗 點此開啟</a>`;
     } 
-    // 一般文字欄位
+    // 一般文字欄位 (包含日期格式化處理)
     else {
-      row.innerHTML = `<span class="info-label">${key}：</span><span>${value}</span>`;
+      let displayValue = value;
+      
+      // 【關鍵新增】：如果欄位名稱包含「日期」，且內容剛好是 8 位數字 (例如 20260505)
+      if (key.includes('日期') && /^\d{8}$/.test(String(value).trim())) {
+        const strVal = String(value).trim();
+        const yyyy = strVal.substring(0, 4);
+        const mm = strVal.substring(4, 6);
+        const dd = strVal.substring(6, 8);
+        displayValue = `${yyyy}/${mm}/${dd}`;
+      }
+
+      row.innerHTML = `<span class="info-label">${key}：</span><span>${displayValue}</span>`;
     }
     
     container.appendChild(row);
