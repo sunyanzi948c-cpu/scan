@@ -155,9 +155,40 @@ function renderData(data) {
   
   // 動態產生欄位資料
   for (const [key, value] of Object.entries(data)) {
+    // 略過空白沒有填寫的欄位，讓畫面更乾淨
+    if (!value || value === "") continue;
+
     const row = document.createElement('div');
     row.className = 'info-row';
-    row.innerHTML = `<span class="info-label">${key}：</span><span>${value}</span>`;
+    
+    // 【關鍵修改】：針對「圖檔1」與「圖檔2」欄位做圖片渲染處理
+    if (key === '圖檔1' || key === '圖檔2') {
+      // 判斷是否為 Google Drive 連結，若是，嘗試轉換為可直接顯示圖片的格式
+      let imageUrl = value;
+      if (value.includes("drive.google.com/file/d/")) {
+        const fileId = value.split("/d/")[1].split("/")[0];
+        imageUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+      }
+
+      row.innerHTML = `
+        <div class="info-label" style="display: block; margin-bottom: 5px;">${key}：</div>
+        <a href="${value}" target="_blank" title="點擊檢視原圖">
+          <img src="${imageUrl}" 
+               alt="${key}" 
+               style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: block; margin: 0 auto; max-height: 200px; object-fit: cover;"
+               onerror="this.onerror=null; this.parentNode.innerHTML='<a href=&quot;${value}&quot; target=&quot;_blank&quot; style=&quot;color: #3498db; text-decoration: underline;&quot;>🔗 點此開啟照片連結</a>';">
+        </a>
+      `;
+    } 
+    // 針對一般網址 (例如原廠手冊連結)
+    else if (String(value).startsWith('http')) {
+      row.innerHTML = `<span class="info-label">${key}：</span><a href="${value}" target="_blank" style="color: #3498db;">🔗 點此開啟</a>`;
+    } 
+    // 一般文字欄位
+    else {
+      row.innerHTML = `<span class="info-label">${key}：</span><span>${value}</span>`;
+    }
+    
     container.appendChild(row);
   }
   
