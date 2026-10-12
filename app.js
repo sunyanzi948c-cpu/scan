@@ -161,12 +161,19 @@ function renderData(data) {
     const row = document.createElement('div');
     row.className = 'info-row';
     
-    // 針對「圖檔1」與「圖檔2」欄位做圖片渲染處理
+    // 【關鍵修改】：針對「圖檔1」與「圖檔2」欄位，改用 Thumbnail API
     if (key === '圖檔1' || key === '圖檔2') {
       let imageUrl = value;
+      
+      // 判斷是否為 Google Drive 連結，並擷取檔案 ID
       if (value.includes("drive.google.com/file/d/")) {
         const fileId = value.split("/d/")[1].split("/")[0];
-        imageUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+        // 改用 Thumbnail API 繞過防盜連，sz=w800 代表設定圖片寬度上限為 800px
+        imageUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
+      } else if (value.includes("drive.google.com/open?id=")) {
+        // 兼容另一種常見的 Drive 連結格式
+        const fileId = value.split("id=")[1].split("&")[0];
+        imageUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w800`;
       }
 
       row.innerHTML = `
@@ -187,7 +194,7 @@ function renderData(data) {
     else {
       let displayValue = value;
       
-      // 【關鍵新增】：如果欄位名稱包含「日期」，且內容剛好是 8 位數字 (例如 20260505)
+      // 如果欄位名稱包含「日期」，且內容剛好是 8 位數字 (例如 20260505)
       if (key.includes('日期') && /^\d{8}$/.test(String(value).trim())) {
         const strVal = String(value).trim();
         const yyyy = strVal.substring(0, 4);
