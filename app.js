@@ -1,5 +1,5 @@
 // ⚠️ 這是您原本的 API 網址，已保留
-const API_URL = "https://script.google.com/macros/s/AKfycbxpLmSQ9uhyr1JHpKTUVqbcg_kp-2ghMBEJlELd8ce5O2-yZfOatl1eRDgsQO5GtbnW/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbyY1AvXFODpmrsIXvMwfsKuDJi-rzmcNrdalrTZ-OR9l0Zl2xw0tmbQ0sdaopUun7qK/exec"; 
 
 let html5QrCode;
 
@@ -255,3 +255,85 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+// 檢查登入狀態 (網頁載入時執行)
+document.addEventListener("DOMContentLoaded", () => {
+  const isLoggedIn = localStorage.getItem("isLoggedIn");
+  
+  if (isLoggedIn === "true") {
+    // 已登入，顯示主要畫面，隱藏登入畫面
+    document.getElementById("login-container").style.display = "none";
+    document.getElementById("app-container").style.display = "block";
+    
+    // 初始化原本的畫面 (顯示上次同步時間、開啟相機等)
+    const lastSync = localStorage.getItem("lastSyncTime");
+    if (lastSync) {
+      const syncTimeDiv = document.getElementById("sync-time");
+      if (syncTimeDiv) syncTimeDiv.innerText = "最後同步時間：" + lastSync;
+    }
+    startScanner();
+  } else {
+    // 未登入，只顯示登入畫面
+    document.getElementById("login-container").style.display = "block";
+    document.getElementById("app-container").style.display = "none";
+  }
+});
+
+// 執行登入 API 呼叫
+function performLogin() {
+  const accInput = document.getElementById("login-account");
+  const pwdInput = document.getElementById("login-password");
+  const btn = document.getElementById("login-btn");
+  
+  const account = accInput.value.trim();
+  const password = pwdInput.value.trim();
+  
+  if (!account || !password) {
+    alert("請輸入帳號與密碼！");
+    return;
+  }
+  
+  btn.innerText = "登入驗證中...";
+  btn.disabled = true;
+
+  // 呼叫 GAS 登入 API
+  const loginUrl = `${API_URL}?action=login&account=${encodeURIComponent(account)}&password=${encodeURIComponent(password)}`;
+  
+  fetch(loginUrl)
+    .then(response => response.json())
+    .then(result => {
+      if (result.status === "success") {
+        // 登入成功，將狀態記錄在手機中
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("userName", result.userName);
+        
+        alert(`歡迎回來，${result.userName}！`);
+        
+        // 切換畫面
+        document.getElementById("login-container").style.display = "none";
+        document.getElementById("app-container").style.display = "block";
+        startScanner();
+      } else {
+        // 密碼錯誤
+        alert("登入失敗：" + result.message);
+      }
+    })
+    .catch(err => {
+      alert("連線錯誤，請確認網路狀態！");
+    })
+    .finally(() => {
+      btn.innerText = "登入";
+      btn.disabled = false;
+    });
+}
+
+// 登出功能 (可選，您可以做一個登出按鈕綁定這個函式)
+function performLogout() {
+  // 清除登入狀態與本地快取的機密資料
+  localStorage.removeItem("isLoggedIn");
+  localStorage.removeItem("userName");
+  localStorage.removeItem("deviceList"); // 保護資料，登出就刪除快取清單
+  
+  alert("已成功登出");
+  location.reload(); // 重新整理網頁，回到登入畫面
+}

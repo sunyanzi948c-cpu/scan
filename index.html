@@ -13,7 +13,7 @@
     <!-- 蘋果 iOS 專用的主畫面圖示 (Apple Touch Icon) -->
     <link rel="apple-touch-icon" href="./icon-192.png" />
 
-    <!-- 確保網頁有載入 manifest 設定檔 (您原本應該已經有這行) -->
+    <!-- 確保網頁有載入 manifest 設定檔 -->
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#4A90E2" />
 
@@ -88,71 +88,148 @@
     </style>
   </head>
   <body>
-    <h2>📱 設備掃碼查詢</h2>
-
-    <div style="text-align: center; margin-bottom: 15px">
-      <button
-        onclick="syncData()"
-        style="
-          background-color: #27ae60;
-          padding: 10px;
-          width: auto;
-          display: inline-block;
-        ">
-        🔄 從雲端同步最新資料
-      </button>
-      <div
-        id="sync-time"
-        style="font-size: 12px; color: #7f8c8d; margin-top: 5px"></div>
-    </div>
-
-    <!-- 👇 請在這裡加入「手動輸入」區塊 👇 -->
-    <div style="text-align: center; margin-bottom: 15px">
+    <!-- 👇 新增的登入區塊 👇 -->
+    <div
+      id="login-container"
+      style="
+        max-width: 400px;
+        margin: 50px auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      ">
+      <h3 style="color: #2c3e50; margin-bottom: 20px">🔒 系統登入</h3>
       <input
         type="text"
-        id="manual-barcode"
-        placeholder="或手動輸入條碼..."
+        id="login-account"
+        placeholder="請輸入帳號"
         style="
-          padding: 10px;
-          width: 55%;
-          font-size: 16px;
+          width: 100%;
+          padding: 12px;
+          margin-bottom: 15px;
           border: 1px solid #bdc3c7;
           border-radius: 4px;
           box-sizing: border-box;
+          font-size: 16px;
+        " />
+      <input
+        type="password"
+        id="login-password"
+        placeholder="請輸入密碼"
+        style="
+          width: 100%;
+          padding: 12px;
+          margin-bottom: 20px;
+          border: 1px solid #bdc3c7;
+          border-radius: 4px;
+          box-sizing: border-box;
+          font-size: 16px;
         " />
       <button
-        onclick="manualSearch()"
+        onclick="performLogin()"
+        id="login-btn"
         style="
-          padding: 10px;
-          width: 25%;
-          font-size: 16px;
-          background-color: #34495e;
+          width: 100%;
+          padding: 12px;
+          background-color: #2c3e50;
           color: white;
           border: none;
           border-radius: 4px;
           cursor: pointer;
+          margin: 0 auto;
         ">
-        查詢
+        登入
       </button>
     </div>
-    <!-- 👆 手動輸入區塊結束 👆 -->
+    <!-- 👆 登入區塊結束 👆 -->
 
-    <!-- 掃描器容器 -->
-    <div id="reader"></div>
+    <!-- 👇 原本的應用程式區塊 (用 div 包起來，預設 display: none) 👇 -->
+    <div id="app-container" style="display: none">
+      <!-- 登出按鈕 (放在右上方) -->
+      <div style="max-width: 500px; margin: 0 auto; text-align: right">
+        <button
+          onclick="performLogout()"
+          style="
+            background-color: #e74c3c;
+            padding: 6px 12px;
+            width: auto;
+            display: inline-block;
+            margin: 0;
+            font-size: 14px;
+          ">
+          登出
+        </button>
+      </div>
 
-    <!-- 重新掃描按鈕 (預設隱藏) -->
-    <button id="rescan-btn" style="display: none" onclick="startScanner()">
-      重新掃描
-    </button>
+      <h2>📱 設備掃碼查詢</h2>
 
-    <!-- 讀取中提示 -->
-    <div id="loading">資料查詢中，請稍候...</div>
+      <div style="text-align: center; margin-bottom: 15px">
+        <button
+          onclick="syncData()"
+          style="
+            background-color: #27ae60;
+            padding: 10px;
+            width: auto;
+            display: inline-block;
+          ">
+          🔄 從雲端同步最新資料
+        </button>
+        <div
+          id="sync-time"
+          style="font-size: 12px; color: #7f8c8d; margin-top: 5px"></div>
+      </div>
 
-    <!-- 查詢結果呈現區 -->
-    <div id="result-container">
-      <h3 style="margin-top: 0; color: #27ae60">✅ 查詢成功</h3>
-      <div id="device-info"></div>
+      <div style="text-align: center; margin-bottom: 15px">
+        <input
+          type="text"
+          id="manual-barcode"
+          placeholder="或手動輸入條碼..."
+          style="
+            padding: 10px;
+            width: 55%;
+            font-size: 16px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            box-sizing: border-box;
+          " />
+        <button
+          onclick="manualSearch()"
+          style="
+            padding: 10px;
+            width: 25%;
+            font-size: 16px;
+            background-color: #34495e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-block;
+            margin: 0;
+          ">
+          查詢
+        </button>
+      </div>
+
+      <!-- 掃描器容器 -->
+      <div id="reader"></div>
+
+      <!-- 重新掃描按鈕 (預設隱藏) -->
+      <button id="rescan-btn" style="display: none" onclick="startScanner()">
+        重新掃描
+      </button>
+
+      <!-- 讀取中提示 -->
+      <div id="loading">資料查詢中，請稍候...</div>
+
+      <!-- 查詢結果呈現區 -->
+      <div id="result-container">
+        <h3 style="margin-top: 0; color: #27ae60">✅ 查詢成功</h3>
+        <div id="device-info"></div>
+      </div>
     </div>
+    <!-- 👆 應用程式區塊結束 👆 -->
 
     <script src="app.js"></script>
 
