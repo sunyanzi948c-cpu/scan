@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scanner-pwa-v4';
+const CACHE_NAME = 'scanner-pwa-v5';
 
 self.addEventListener('install', event => {
   event.waitUntil(
