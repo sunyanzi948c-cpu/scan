@@ -3,15 +3,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyY1AvXFODpmrsIXvMwfsKu
 
 let html5QrCode;
 
-// 網頁載入時，檢查上次同步時間並啟動掃描器
-document.addEventListener("DOMContentLoaded", () => {
-  const lastSync = localStorage.getItem("lastSyncTime");
-  if (lastSync) {
-    const syncTimeDiv = document.getElementById("sync-time");
-    if (syncTimeDiv) syncTimeDiv.innerText = "最後同步時間：" + lastSync;
-  }
-  startScanner();
-});
+
 
 // ==========================================
 // 1. 新增功能：下載整份表單並存入手機 (盤點前執行一次)
